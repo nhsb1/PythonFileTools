@@ -1,0 +1,34 @@
+import os
+import argparse
+import fnmatch
+
+#Usage:
+#python script.py -p "Q:\\path\\sub\\sub" -min 100000000 -max 200000000 -e "*_converted.*" 
+#Purpose:
+#Searches a specified directory hierarchy for files in a specified size range, which can be constrained to filenames ending in a specified pattern/extension.
+#
+#Script will walk a specified (-p path) folder hierarhy ("Q:\\path\" or '/path/to/directory'; Win/Linux) searching for files sized in the min/max range
+#If no values are provided for -min -max, 900mb and 10gb will be specified as the default values
+#If the argument -e is specified, it will only seach for files ending in *_converted.* (or you can specify *_converted.ohter; *d.nfo, *_converted.mp4, *_converted.nfo, etc.)
+
+
+
+def print_large_files(path, min_size, max_size, extension):
+    counter = 0
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if fnmatch.fnmatch(file, extension):
+                file_path = os.path.join(root, file)
+                if min_size < os.path.getsize(file_path) < max_size:
+                    print(f'{file_path} - {os.path.getsize(file_path)} bytes')
+                    counter += 1
+    print(f'{counter} files found.')
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Find large files')
+    parser.add_argument('-p', '--path', dest='path', default='.', help='path to search')
+    parser.add_argument('-min', dest='min_size', type=int, default=900*1024*1024, help='minimum file size in bytes')
+    parser.add_argument('-max', dest='max_size', type=int, default=10*1024*1024*1024, help='maximum file size in bytes')
+    parser.add_argument('-e', '--extension', dest='extension', default='*_converted.*', help='extension of the files to search')
+    args = parser.parse_args()
+    print_large_files(args.path, args.min_size, args.max_size, args.extension)
