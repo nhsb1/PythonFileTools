@@ -1,0 +1,40 @@
+import os
+import shutil
+import time
+
+#Put this file at the told of a folder structure.  
+#When you run it, it will descend into each subdirectory, find files that are > 1GB, and rename those files to match the immediate parent folder's name
+#For each file that it finds in each subdirectory, it will increment the file name.
+#For example, in /home/username/BigFiles... you have FileA.zip, FileB.zip > 1GB, and a bunch of files <1GB.
+#... after you run this script, FileA.zip, and FileB.zip will be renamed to BigFiles_1.zip, BigFiles_2.zip, leaving the <1GB files untouched.
+
+def rename_large_files(folder_path):
+    error_log = "error.log"
+    counter = 1
+    folder_count = 0
+    start_time = time.time()
+    for dirpath, dirnames, filenames in os.walk(folder_path):
+        counter = 1 # reset counter to 0 for every subdirectory
+        for filename in filenames:
+            file_path = os.path.join(dirpath, filename)
+            try:
+                if os.path.getsize(file_path) > (1 * 1024 * 1024 * 1024): # 1 GB
+                    parent_folder_name = os.path.basename(os.path.dirname(file_path))
+                    new_file_name = f"{parent_folder_name}_{counter}.{filename.split('.')[-1]}"
+                    new_file_path = os.path.join(dirpath, new_file_name)
+                    shutil.move(file_path, new_file_path)
+                    with open(error_log, "a") as f:
+                        f.write(f"{new_file_name} renamed from {filename}\n")
+                    counter += 1
+                    folder_count += 1
+            except Exception as e:
+                with open(error_log, "a") as f:
+                    f.write(f"ERROR!! {e}\n")
+    end_time = time.time()
+    total_time = end_time - start_time
+    with open(error_log, "a") as f:
+        f.write(f"\nSummary:\n")
+        f.write(f"Total running time: {total_time} seconds\n")
+        f.write(f"Number rename events occurred in: {folder_count}\n")
+
+rename_large_files("/home/username/workingdirectory")
